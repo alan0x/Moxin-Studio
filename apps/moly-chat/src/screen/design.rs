@@ -315,65 +315,73 @@ live_design! {
 
                 vlm_file_row = <View> {
                     width: Fill, height: Fit
-                    flow: Right
+                    flow: Down
                     spacing: 8
-                    align: {y: 0.5}
 
-                    vlm_browse_btn = <View> {
-                        width: Fit, height: 28, cursor: Hand
-                        align: {x: 0.5, y: 0.5}
-                        padding: {left: 12, right: 12}
-                        show_bg: true
-                        draw_bg: {
-                            instance hover: 0.0
-                            fn pixel(self) -> vec4 {
-                                let sdf = Sdf2d::viewport(self.pos * self.rect_size);
-                                sdf.box(0.5, 0.5, self.rect_size.x - 1.0, self.rect_size.y - 1.0, 6.0);
-                                sdf.fill(mix(#6366f1, #4f46e5, self.hover));
-                                return sdf.result;
-                            }
-                        }
-                        animator: {
-                            hover = {
-                                default: off
-                                off = { from: {all: Forward{duration: 0.15}}, apply: {draw_bg: {hover: 0.0}} }
-                                on  = { from: {all: Forward{duration: 0.15}}, apply: {draw_bg: {hover: 1.0}} }
-                            }
-                        }
-                        <Label> { text: "Browse...", draw_text: { color: #ffffff, text_style: <FONT_MEDIUM>{ font_size: 12.0 } } }
-                    }
-                    vlm_file_label = <Label> {
+                    <View> {
                         width: Fill, height: Fit
-                        text: ""
-                        draw_text: { color: #6b7280, text_style: <FONT_REGULAR>{ font_size: 11.0 } }
+                        flow: Right
+                        spacing: 8
+                        align: {y: 0.5}
+
+                        vlm_browse_btn = <View> {
+                            width: Fit, height: 28, cursor: Hand
+                            align: {x: 0.5, y: 0.5}
+                            padding: {left: 12, right: 12}
+                            show_bg: true
+                            draw_bg: {
+                                instance hover: 0.0
+                                fn pixel(self) -> vec4 {
+                                    let sdf = Sdf2d::viewport(self.pos * self.rect_size);
+                                    sdf.box(0.5, 0.5, self.rect_size.x - 1.0, self.rect_size.y - 1.0, 6.0);
+                                    sdf.fill(mix(#6366f1, #4f46e5, self.hover));
+                                    return sdf.result;
+                                }
+                            }
+                            animator: {
+                                hover = {
+                                    default: off
+                                    off = { from: {all: Forward{duration: 0.15}}, apply: {draw_bg: {hover: 0.0}} }
+                                    on  = { from: {all: Forward{duration: 0.15}}, apply: {draw_bg: {hover: 1.0}} }
+                                }
+                            }
+                            <Label> { text: "Browse...", draw_text: { color: #ffffff, text_style: <FONT_MEDIUM>{ font_size: 12.0 } } }
+                        }
+                        vlm_file_label = <Label> {
+                            width: Fill, height: Fit
+                            text: ""
+                            draw_text: { color: #6b7280, text_style: <FONT_REGULAR>{ font_size: 11.0 } }
+                        }
+                        vlm_clear_btn = <View> {
+                            width: Fit, height: 24, cursor: Hand
+                            align: {x: 0.5, y: 0.5}
+                            padding: {left: 8, right: 8}
+                            visible: false
+                            show_bg: true
+                            draw_bg: {
+                                instance hover: 0.0
+                                fn pixel(self) -> vec4 {
+                                    let sdf = Sdf2d::viewport(self.pos * self.rect_size);
+                                    sdf.box(0.5, 0.5, self.rect_size.x - 1.0, self.rect_size.y - 1.0, 4.0);
+                                    sdf.fill(mix(#fee2e2, #fecaca, self.hover));
+                                    return sdf.result;
+                                }
+                            }
+                            animator: {
+                                hover = {
+                                    default: off
+                                    off = { from: {all: Forward{duration: 0.15}}, apply: {draw_bg: {hover: 0.0}} }
+                                    on  = { from: {all: Forward{duration: 0.15}}, apply: {draw_bg: {hover: 1.0}} }
+                                }
+                            }
+                            <Label> { text: "Clear", draw_text: { color: #dc2626, text_style: <FONT_MEDIUM>{ font_size: 10.0 } } }
+                        }
                     }
+
                     vlm_preview = <Image> {
-                        width: 48, height: 48
+                        width: 200, height: 120
                         visible: false
-                    }
-                    vlm_clear_btn = <View> {
-                        width: Fit, height: 24, cursor: Hand
-                        align: {x: 0.5, y: 0.5}
-                        padding: {left: 8, right: 8}
-                        visible: false
-                        show_bg: true
-                        draw_bg: {
-                            instance hover: 0.0
-                            fn pixel(self) -> vec4 {
-                                let sdf = Sdf2d::viewport(self.pos * self.rect_size);
-                                sdf.box(0.5, 0.5, self.rect_size.x - 1.0, self.rect_size.y - 1.0, 4.0);
-                                sdf.fill(mix(#fee2e2, #fecaca, self.hover));
-                                return sdf.result;
-                            }
-                        }
-                        animator: {
-                            hover = {
-                                default: off
-                                off = { from: {all: Forward{duration: 0.15}}, apply: {draw_bg: {hover: 0.0}} }
-                                on  = { from: {all: Forward{duration: 0.15}}, apply: {draw_bg: {hover: 1.0}} }
-                            }
-                        }
-                        <Label> { text: "Clear", draw_text: { color: #dc2626, text_style: <FONT_MEDIUM>{ font_size: 10.0 } } }
+                        fit: Smallest
                     }
                 }
             }
@@ -610,49 +618,57 @@ live_design! {
 
                 image_ref_section = <View> {
                     width: Fill, height: Fit
-                    flow: Right
-                    spacing: 12
-                    align: {y: 0.5}
+                    flow: Down
+                    spacing: 8
                     visible: false
 
-                    <Label> {
-                        width: Fit, height: Fit
-                        text: "Ref Image:"
-                        draw_text: { color: #374151, text_style: <FONT_SEMIBOLD>{ font_size: 12.0 } }
-                    }
-                    image_ref_browse_btn = <View> {
-                        width: Fit, height: 28, cursor: Hand
-                        align: {x: 0.5, y: 0.5}
-                        padding: {left: 12, right: 12}
-                        show_bg: true
-                        draw_bg: {
-                            instance hover: 0.0
-                            fn pixel(self) -> vec4 {
-                                let sdf = Sdf2d::viewport(self.pos * self.rect_size);
-                                sdf.box(0.5, 0.5, self.rect_size.x - 1.0, self.rect_size.y - 1.0, 6.0);
-                                sdf.fill(mix(#f3f4f6, #e5e7eb, self.hover));
-                                sdf.box(0.5, 0.5, self.rect_size.x - 1.0, self.rect_size.y - 1.0, 6.0);
-                                sdf.stroke(#d1d5db, 1.0);
-                                return sdf.result;
-                            }
+                    <View> {
+                        width: Fill, height: Fit
+                        flow: Right
+                        spacing: 12
+                        align: {y: 0.5}
+
+                        <Label> {
+                            width: Fit, height: Fit
+                            text: "Ref Image:"
+                            draw_text: { color: #374151, text_style: <FONT_SEMIBOLD>{ font_size: 12.0 } }
                         }
-                        animator: {
-                            hover = {
-                                default: off
-                                off = { from: {all: Forward{duration: 0.15}}, apply: {draw_bg: {hover: 0.0}} }
-                                on  = { from: {all: Forward{duration: 0.15}}, apply: {draw_bg: {hover: 1.0}} }
+                        image_ref_browse_btn = <View> {
+                            width: Fit, height: 28, cursor: Hand
+                            align: {x: 0.5, y: 0.5}
+                            padding: {left: 12, right: 12}
+                            show_bg: true
+                            draw_bg: {
+                                instance hover: 0.0
+                                fn pixel(self) -> vec4 {
+                                    let sdf = Sdf2d::viewport(self.pos * self.rect_size);
+                                    sdf.box(0.5, 0.5, self.rect_size.x - 1.0, self.rect_size.y - 1.0, 6.0);
+                                    sdf.fill(mix(#f3f4f6, #e5e7eb, self.hover));
+                                    sdf.box(0.5, 0.5, self.rect_size.x - 1.0, self.rect_size.y - 1.0, 6.0);
+                                    sdf.stroke(#d1d5db, 1.0);
+                                    return sdf.result;
+                                }
                             }
+                            animator: {
+                                hover = {
+                                    default: off
+                                    off = { from: {all: Forward{duration: 0.15}}, apply: {draw_bg: {hover: 0.0}} }
+                                    on  = { from: {all: Forward{duration: 0.15}}, apply: {draw_bg: {hover: 1.0}} }
+                                }
+                            }
+                            <Label> { text: "Browse...", draw_text: { color: #374151, text_style: <FONT_REGULAR>{ font_size: 12.0 } } }
                         }
-                        <Label> { text: "Browse...", draw_text: { color: #374151, text_style: <FONT_REGULAR>{ font_size: 12.0 } } }
+                        image_ref_file_label = <Label> {
+                            width: Fit, height: Fit
+                            text: "No image selected"
+                            draw_text: { color: #9ca3af, text_style: <FONT_REGULAR>{ font_size: 11.0 } }
+                        }
                     }
-                    image_ref_file_label = <Label> {
-                        width: Fit, height: Fit
-                        text: "No image selected"
-                        draw_text: { color: #9ca3af, text_style: <FONT_REGULAR>{ font_size: 11.0 } }
-                    }
+
                     image_ref_preview = <Image> {
-                        width: 48, height: 48
+                        width: 200, height: 120
                         visible: false
+                        fit: Smallest
                     }
                 }
 
@@ -757,6 +773,32 @@ live_design! {
                             }
                         }
                         <Label> { text: "Browse...", draw_text: { color: #ffffff, text_style: <FONT_MEDIUM>{ font_size: 12.0 } } }
+                    }
+                    asr_play_btn = <View> {
+                        width: Fit, height: 28, cursor: Hand
+                        align: {x: 0.5, y: 0.5}
+                        padding: {left: 10, right: 10}
+                        visible: false
+                        show_bg: true
+                        draw_bg: {
+                            instance hover: 0.0
+                            fn pixel(self) -> vec4 {
+                                let sdf = Sdf2d::viewport(self.pos * self.rect_size);
+                                sdf.box(0.5, 0.5, self.rect_size.x - 1.0, self.rect_size.y - 1.0, 6.0);
+                                sdf.fill(mix(#f3f4f6, #e5e7eb, self.hover));
+                                sdf.box(0.5, 0.5, self.rect_size.x - 1.0, self.rect_size.y - 1.0, 6.0);
+                                sdf.stroke(#d1d5db, 1.0);
+                                return sdf.result;
+                            }
+                        }
+                        animator: {
+                            hover = {
+                                default: off
+                                off = { from: {all: Forward{duration: 0.15}}, apply: {draw_bg: {hover: 0.0}} }
+                                on  = { from: {all: Forward{duration: 0.15}}, apply: {draw_bg: {hover: 1.0}} }
+                            }
+                        }
+                        asr_play_label = <Label> { text: "▶ Play", draw_text: { color: #374151, text_style: <FONT_MEDIUM>{ font_size: 11.0 } } }
                     }
                     asr_file_label = <Label> {
                         width: Fill, height: Fit

@@ -379,6 +379,12 @@ pub struct ChatApp {
     #[rust]
     asr_file_path: String,
 
+    /// ASR: audio preview playback state
+    #[rust]
+    asr_playing: bool,
+    #[rust]
+    asr_play_process: Option<std::process::Child>,
+
     /// ASR/TTS/Image: receiver for async operation results
     #[rust]
     mode_rx: Option<mpsc::Receiver<Result<String, String>>>,
@@ -1038,20 +1044,19 @@ impl Widget for ChatApp {
                             let lower = path.to_lowercase();
                             if lower.ends_with(".jpg") || lower.ends_with(".jpeg") || lower.ends_with(".png")
                                 || lower.ends_with(".bmp") || lower.ends_with(".gif") || lower.ends_with(".webp") {
-                                if let Ok(bytes) = std::fs::read(path) {
+                                let decoded_path = Self::url_decode_path(path);
+                                if let Ok(bytes) = std::fs::read(&decoded_path) {
                                     use base64::Engine;
                                     let b64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
                                     self.vlm_image_b64 = Some(b64);
-                                    self.vlm_image_path = path.clone();
-                                    let filename = std::path::Path::new(path)
+                                    self.vlm_image_path = decoded_path.clone();
+                                    let filename = std::path::Path::new(&decoded_path)
                                         .file_name()
                                         .map(|f| f.to_string_lossy().to_string())
-                                        .unwrap_or_else(|| path.clone());
+                                        .unwrap_or_else(|| decoded_path.clone());
                                     self.view.label(ids!(mode_controls.vlm_controls.vlm_file_row.vlm_file_label))
                                         .set_text(cx, &filename);
-                                    let preview = self.view.image(ids!(mode_controls.vlm_controls.vlm_file_row.vlm_preview));
-                                    preview.set_visible(cx, true);
-                                    let _ = preview.load_image_file_by_path(cx, std::path::Path::new(path));
+                                    Self::load_vlm_preview(&self.view, cx, &bytes, &decoded_path);
                                     self.view.redraw(cx);
                                 }
                                 break;
@@ -1087,14 +1092,15 @@ impl Widget for ChatApp {
                         .apply_over(cx, live! { draw_bg: { hover: (0.0) } });
                     for item in e.items.iter() {
                         if let DragItem::FilePath { path, .. } = item {
-                            let lower = path.to_lowercase();
+                            let decoded = Self::url_decode_path(path);
+                            let lower = decoded.to_lowercase();
                             if lower.ends_with(".wav") || lower.ends_with(".mp3") || lower.ends_with(".m4a")
                                 || lower.ends_with(".flac") || lower.ends_with(".ogg") || lower.ends_with(".aac") {
-                                self.asr_file_path = path.clone();
-                                let filename = std::path::Path::new(path)
+                                self.asr_file_path = decoded.clone();
+                                let filename = std::path::Path::new(&decoded)
                                     .file_name()
                                     .map(|f| f.to_string_lossy().to_string())
-                                    .unwrap_or_else(|| path.clone());
+                                    .unwrap_or_else(|| decoded.clone());
                                 self.view.label(ids!(mode_controls.asr_controls.asr_file_row.asr_file_label))
                                     .set_text(cx, &filename);
                                 self.start_asr_transcribe(cx, scope);
@@ -1175,17 +1181,32 @@ impl Widget for ChatApp {
             }
         }
 
-        // Show ASR clear button when audio file is selected
+        // Show ASR play/clear buttons when audio file is selected
         if self.chat_mode == ChatMode::Asr {
             let has_audio = !self.asr_file_path.is_empty();
             self.view.view(ids!(mode_controls.asr_controls.asr_file_row.asr_clear_btn))
                 .set_visible(cx, has_audio);
+            self.view.view(ids!(mode_controls.asr_controls.asr_file_row.asr_play_btn))
+                .set_visible(cx, has_audio && !self.mode_busy);
             if has_audio {
                 self.view.view(ids!(mode_controls.asr_controls.asr_drop_zone))
                     .set_visible(cx, false);
+                let play_label = if self.asr_playing { "Stop" } else { "▶ Play" };
+                self.view.label(ids!(mode_controls.asr_controls.asr_file_row.asr_play_btn.asr_play_label))
+                    .set_text(cx, play_label);
             } else {
                 self.view.view(ids!(mode_controls.asr_controls.asr_drop_zone))
                     .set_visible(cx, true);
+            }
+        }
+
+        // Check if ASR audio playback finished
+        if self.asr_playing {
+            if let Some(ref mut proc) = self.asr_play_process {
+                if let Ok(Some(_)) = proc.try_wait() {
+                    self.asr_playing = false;
+                    self.asr_play_process = None;
+                }
             }
         }
 
@@ -1366,10 +1387,37 @@ impl WidgetMatchEvent for ChatApp {
             self.handle_asr_browse(cx);
         }
 
+        // ASR: Play/stop audio preview
+        if self.view.view(ids!(mode_controls.asr_controls.asr_file_row.asr_play_btn))
+            .finger_down(&actions).is_some()
+        {
+            if self.asr_playing {
+                if let Some(ref mut proc) = self.asr_play_process {
+                    let _ = proc.kill();
+                }
+                self.asr_playing = false;
+                self.asr_play_process = None;
+            } else if !self.asr_file_path.is_empty() {
+                if let Ok(child) = std::process::Command::new("afplay")
+                    .arg(&self.asr_file_path)
+                    .spawn()
+                {
+                    self.asr_play_process = Some(child);
+                    self.asr_playing = true;
+                }
+            }
+            self.view.redraw(cx);
+        }
+
         // ASR: Clear audio button
         if self.view.view(ids!(mode_controls.asr_controls.asr_file_row.asr_clear_btn))
             .finger_down(&actions).is_some()
         {
+            if let Some(ref mut proc) = self.asr_play_process {
+                let _ = proc.kill();
+            }
+            self.asr_playing = false;
+            self.asr_play_process = None;
             self.asr_file_path.clear();
             self.view.label(ids!(mode_controls.asr_controls.asr_file_row.asr_file_label))
                 .set_text(cx, "");
@@ -1459,22 +1507,8 @@ impl ChatApp {
                 Some(RegistryCategory::Llm)      => Some(ChatMode::Llm),
                 _                                => None,
             };
-            // If no active model, use the current session's saved category
-            from_active.unwrap_or_else(|| {
-                if let Some(chat_id) = self.current_chat_id {
-                    if let Some(chat) = store.chats.get_chat_by_id(chat_id) {
-                        match chat.model_category {
-                            Some(RegistryCategory::Vlm)      => return ChatMode::Vlm,
-                            Some(RegistryCategory::Asr)      => return ChatMode::Asr,
-                            Some(RegistryCategory::Tts)      => return ChatMode::Tts,
-                            Some(RegistryCategory::ImageGen) => return ChatMode::ImageGen,
-                            Some(RegistryCategory::VideoGen) => return ChatMode::VideoGen,
-                            _ => {}
-                        }
-                    }
-                }
-                ChatMode::Llm
-            })
+            // If no active model, default to LLM (hides mode-specific controls)
+            from_active.unwrap_or(ChatMode::Llm)
         } else {
             ChatMode::Llm
         };
@@ -1499,26 +1533,23 @@ impl ChatApp {
     /// The Chat widget fires ChatTask::Send automatically, which hits the wrong
     /// endpoint for TTS/ImageGen/VideoGen/ASR and returns an error. This method
     /// strips those stale errors every frame so they don't clutter the chat.
-    fn strip_mode_errors(&mut self, cx: &mut Cx) {
+    fn strip_mode_errors(&mut self, _cx: &mut Cx) {
         if !matches!(self.chat_mode, ChatMode::Vlm | ChatMode::Tts | ChatMode::ImageGen | ChatMode::VideoGen | ChatMode::Asr) {
             return;
         }
         use moly_kit::aitk::protocol::EntityId;
         let mut ctrl = self.chat_controller.lock().unwrap();
         let msgs = &ctrl.state().messages;
-        let has_error = msgs.iter().any(|m| {
+        let error_count = msgs.iter().filter(|m| {
             matches!(m.from, EntityId::App | EntityId::System) && !m.metadata.is_writing
-        });
-        if has_error {
+        }).count();
+        if error_count > 0 {
             let kept: Vec<_> = msgs.iter()
                 .filter(|m| m.metadata.is_writing || !matches!(m.from, EntityId::App | EntityId::System))
                 .cloned()
                 .collect();
             ctrl.dispatch_mutation(VecMutation::Set(kept.clone()));
             self.last_mode_msg_count = kept.len();
-            drop(ctrl);
-            self.skip_chat_draw_frames = 2;
-            cx.new_next_frame();
         }
     }
 
@@ -1721,6 +1752,43 @@ impl ChatApp {
     }
 
     /// Get WAV file duration in seconds from file header
+    fn load_vlm_preview(view: &View, cx: &mut Cx, bytes: &[u8], path: &str) {
+        let preview = view.image(ids!(mode_controls.vlm_controls.vlm_file_row.vlm_preview));
+        preview.set_visible(cx, true);
+        let lower = path.to_lowercase();
+        let result = if lower.ends_with(".jpg") || lower.ends_with(".jpeg") {
+            preview.load_jpg_from_data(cx, bytes)
+        } else if lower.ends_with(".png") {
+            preview.load_png_from_data(cx, bytes)
+        } else {
+            preview.load_image_file_by_path(cx, std::path::Path::new(path))
+        };
+        if let Err(e) = result {
+            ::log::warn!("Failed to load VLM preview: {:?}", e);
+        }
+    }
+
+    fn url_decode_path(path: &str) -> String {
+        let mut result = Vec::new();
+        let bytes = path.as_bytes();
+        let mut i = 0;
+        while i < bytes.len() {
+            if bytes[i] == b'%' && i + 2 < bytes.len() {
+                if let (Ok(hi), Ok(lo)) = (
+                    u8::from_str_radix(std::str::from_utf8(&bytes[i+1..i+2]).unwrap_or(""), 16),
+                    u8::from_str_radix(std::str::from_utf8(&bytes[i+2..i+3]).unwrap_or(""), 16),
+                ) {
+                    result.push((hi << 4) | lo);
+                    i += 3;
+                    continue;
+                }
+            }
+            result.push(bytes[i]);
+            i += 1;
+        }
+        String::from_utf8(result).unwrap_or_else(|_| path.to_string())
+    }
+
     fn get_wav_duration(path: &str) -> f64 {
         let Ok(data) = std::fs::read(path) else { return 0.0 };
         if data.len() < 44 { return 0.0; }
@@ -1839,16 +1907,16 @@ impl ChatApp {
 
             match self.chat_mode {
                 ChatMode::Vlm => {
-                    if let Ok(bytes) = std::fs::read(&path) {
+                    let decoded = Self::url_decode_path(&path);
+                    if let Ok(bytes) = std::fs::read(&decoded) {
                         use base64::Engine;
                         let b64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
                         self.vlm_image_b64 = Some(b64);
-                        self.vlm_image_path = path.clone();
+                        self.vlm_image_path = decoded.clone();
                         self.view.label(ids!(mode_controls.vlm_controls.vlm_file_row.vlm_file_label))
                             .set_text(cx, &filename);
-                        let preview = self.view.image(ids!(mode_controls.vlm_controls.vlm_file_row.vlm_preview));
-                        preview.set_visible(cx, true);
-                        let _ = preview.load_image_file_by_path(cx, std::path::Path::new(&path));
+                        Self::load_vlm_preview(&self.view, cx, &bytes, &decoded);
+                        self.view.redraw(cx);
                     }
                 }
                 ChatMode::ImageGen => {
@@ -1929,15 +1997,23 @@ impl ChatApp {
         let (tx, rx) = mpsc::channel();
         std::thread::spawn(move || {
             let result = (|| -> Result<String, String> {
+                // URL-decode the file path (drag-and-drop may encode non-ASCII chars)
+                let file_path = Self::url_decode_path(&file_path);
+
+                if !std::path::Path::new(&file_path).exists() {
+                    return Err(format!("File not found: {}", file_path));
+                }
+
                 // Convert non-WAV to WAV if needed
                 let wav_path = if !file_path.to_lowercase().ends_with(".wav") {
                     let tmp = format!("/tmp/ominix_asr_{}.wav", std::process::id());
-                    let status = std::process::Command::new("afconvert")
+                    let output = std::process::Command::new("afconvert")
                         .args(["-f", "WAVE", "-d", "LEI16@16000", "-c", "1", &file_path, &tmp])
-                        .status()
-                        .map_err(|e| format!("afconvert failed: {}", e))?;
-                    if !status.success() {
-                        return Err("Audio conversion failed".to_string());
+                        .output()
+                        .map_err(|e| format!("Failed to run afconvert: {}", e))?;
+                    if !output.status.success() {
+                        let stderr = String::from_utf8_lossy(&output.stderr);
+                        return Err(format!("Unsupported audio format. afconvert error: {}", stderr.trim()));
                     }
                     tmp
                 } else {
