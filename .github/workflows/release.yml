@@ -8,6 +8,9 @@ on:
 permissions:
   contents: write
 
+env:
+  RUSTFLAGS: --cfg apple_bundle
+
 jobs:
   build-macos:
     runs-on: macos-14
@@ -36,87 +39,45 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           WORKSPACE_ROOT="$(pwd)"
+          BUNDLE="Moxin Studio.app"
 
-          mkdir -p "Moxin Studio.app/Contents/MacOS"
-          mkdir -p "Moxin Studio.app/Contents/Resources"
+          mkdir -p "$BUNDLE/Contents/MacOS"
+          mkdir -p "$BUNDLE/Contents/Resources"
 
-          cp target/release/moxin-studio "Moxin Studio.app/Contents/MacOS/moxin-studio-bin"
-          chmod +x "Moxin Studio.app/Contents/MacOS/moxin-studio-bin"
+          cp target/release/moxin-studio "$BUNDLE/Contents/MacOS/moxin-studio"
+          chmod +x "$BUNDLE/Contents/MacOS/moxin-studio"
+          cp moly-shell/resources/AppIcon.icns "$BUNDLE/Contents/Resources/AppIcon.icns"
 
-          cp moly-shell/resources/AppIcon.icns "Moxin Studio.app/Contents/Resources/AppIcon.icns"
+          # Makepad with apple_bundle cfg loads deps from:
+          #   <NSBundle.resourcePath>/<absolute_dep_path>
+          # So we mirror the absolute compile-time paths inside Contents/Resources/.
 
-          # Bundle all resources that Makepad dep() references need at runtime.
-          # Makepad bakes absolute compile-time paths into the binary.
-          # We copy resources into Contents/Resources/deps/ and the launcher
-          # script creates symlinks to recreate the expected directory tree.
+          RESOURCES="$BUNDLE/Contents/Resources"
 
-          RESOURCES="Moxin Studio.app/Contents/Resources/deps"
-          mkdir -p "$RESOURCES"
-
-          # 1) Workspace crate resources (moly-shell, moly-widgets, apps)
+          # 1) Mirror workspace crate resources
           for crate_dir in moly-shell moly-widgets apps/moly-chat apps/moly-settings apps/moly-mcp apps/moly-hub apps/moly-voice; do
             if [ -d "$crate_dir/resources" ]; then
-              mkdir -p "$RESOURCES/workspace/$crate_dir"
-              cp -R "$crate_dir/resources" "$RESOURCES/workspace/$crate_dir/"
+              target_dir="$RESOURCES/$WORKSPACE_ROOT/$crate_dir/resources"
+              mkdir -p "$target_dir"
+              cp -R "$crate_dir/resources/"* "$target_dir/" 2>/dev/null || true
             fi
           done
 
-          # 2) Git dependency resources (makepad-widgets, makepad-component, moly-kit, etc.)
-          for dep_dir in $(find ~/.cargo/git/checkouts -maxdepth 4 -name "resources" -type d 2>/dev/null); do
-            # Get the checkout path up to the commit hash dir
-            # e.g. ~/.cargo/git/checkouts/makepad-abc123/deadbeef/widgets/resources
-            # We want to preserve from the checkouts dir onward
-            rel="${dep_dir#$HOME/.cargo/git/checkouts/}"
-            mkdir -p "$RESOURCES/git/$(dirname "$rel")"
-            cp -R "$dep_dir" "$RESOURCES/git/$(dirname "$rel")/"
+          # 2) Mirror cargo git checkout resources (makepad-widgets fonts, etc.)
+          find ~/.cargo/git/checkouts -name "resources" -type d 2>/dev/null | while read dep_dir; do
+            target_dir="$RESOURCES/$dep_dir"
+            mkdir -p "$target_dir"
+            cp -R "$dep_dir/"* "$target_dir/" 2>/dev/null || true
           done
 
-          # 3) Registry dependency resources
-          for dep_dir in $(find ~/.cargo/registry/src -maxdepth 4 -name "resources" -type d 2>/dev/null); do
-            rel="${dep_dir#$HOME/.cargo/registry/src/}"
-            mkdir -p "$RESOURCES/registry/$(dirname "$rel")"
-            cp -R "$dep_dir" "$RESOURCES/registry/$(dirname "$rel")/"
+          # 3) Mirror cargo registry resources
+          find ~/.cargo/registry/src -name "resources" -type d 2>/dev/null | while read dep_dir; do
+            target_dir="$RESOURCES/$dep_dir"
+            mkdir -p "$target_dir"
+            cp -R "$dep_dir/"* "$target_dir/" 2>/dev/null || true
           done
 
-          # Record the paths used at compile time so the launcher can recreate them
-          echo "$WORKSPACE_ROOT" > "$RESOURCES/workspace_root.txt"
-          echo "$HOME" > "$RESOURCES/build_home.txt"
-
-          # Create launcher script
-          cat > "Moxin Studio.app/Contents/MacOS/moxin-studio" <<'LAUNCHER'
-          #!/bin/bash
-          # Launcher: recreate compile-time resource paths as symlinks
-          SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-          RESOURCES="$SCRIPT_DIR/../Resources/deps"
-
-          if [ -f "$RESOURCES/workspace_root.txt" ] && [ -f "$RESOURCES/build_home.txt" ]; then
-            BUILD_WORKSPACE="$(cat "$RESOURCES/workspace_root.txt")"
-            BUILD_HOME="$(cat "$RESOURCES/build_home.txt")"
-
-            # Symlink workspace root (for crate://self/ resources)
-            if [ ! -e "$BUILD_WORKSPACE" ] && [ -d "$RESOURCES/workspace" ]; then
-              sudo mkdir -p "$(dirname "$BUILD_WORKSPACE")"
-              sudo ln -sf "$RESOURCES/workspace" "$BUILD_WORKSPACE"
-            fi
-
-            # Symlink cargo git checkouts (for crate://makepad-widgets/ etc.)
-            if [ -d "$RESOURCES/git" ] && [ ! -e "$BUILD_HOME/.cargo/git/checkouts" ]; then
-              mkdir -p "$BUILD_HOME/.cargo/git"
-              ln -sf "$RESOURCES/git" "$BUILD_HOME/.cargo/git/checkouts"
-            fi
-
-            # Symlink cargo registry (for registry dependencies)
-            if [ -d "$RESOURCES/registry" ] && [ ! -e "$BUILD_HOME/.cargo/registry/src" ]; then
-              mkdir -p "$BUILD_HOME/.cargo/registry"
-              ln -sf "$RESOURCES/registry" "$BUILD_HOME/.cargo/registry/src"
-            fi
-          fi
-
-          exec "$SCRIPT_DIR/moxin-studio-bin" "$@"
-          LAUNCHER
-          chmod +x "Moxin Studio.app/Contents/MacOS/moxin-studio"
-
-          cat > "Moxin Studio.app/Contents/Info.plist" <<PLIST
+          cat > "$BUNDLE/Contents/Info.plist" <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
