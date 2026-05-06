@@ -23,7 +23,17 @@ Chat with local and cloud models, generate images, transcribe speech, and manage
 - [Rust 1.82+](https://rustup.rs/)
 - Xcode Command Line Tools (`xcode-select --install`)
 
-### Install and run
+### 1. Install OminiX-API
+
+Moxin Studio uses [OminiX-API](https://github.com/OminiX-ai/OminiX-API) as the local inference server. Install it first:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/OminiX-ai/OminiX-API/main/install.sh | sh
+```
+
+This installs `ominix-api` to `/usr/local/bin` and creates `~/.OminiX/` for config and models.
+
+### 2. Build and run Moxin Studio
 
 ```bash
 git clone https://github.com/moxin-org/Moxin-Studio.git
@@ -33,18 +43,22 @@ cargo run -p moly-shell --bin moxin-studio
 
 The first build takes a few minutes to compile all dependencies. Subsequent runs are fast.
 
+### 3. Download a model and start chatting
+
+Open the **Model Hub** from the sidebar, click **Download** on any model, then click **Load**. Moxin Studio will auto-start OminiX-API and route your chat through it.
+
 ## Features
 
-- **Multi-provider chat** — Local models via OminiX-API or Ollama; cloud via OpenAI, Anthropic, Gemini, DeepSeek, OpenRouter, SiliconFlow
-- **Model Hub** — Discover, download, and run models directly. Supports LLM, VLM, ASR, TTS, and image generation
-- **Image generation** — Local or cloud image endpoints
+- **Local AI inference** — Run LLMs, vision models, image generation, speech recognition, and TTS directly on your Mac via OminiX-API
+- **Cloud providers** — Also supports OpenAI, Anthropic, Gemini, DeepSeek, OpenRouter, SiliconFlow, and Ollama
+- **Model Hub** — Discover, download, and run models directly from the app
 - **Voice I/O** — Speech-to-text and text-to-speech with voice cloning
 - **MCP support** — Model Context Protocol for tool use
 - **Chat history** — Persistent, searchable conversation history
 
-## Cloud Providers
+### Cloud Providers
 
-No additional setup required — just open Settings in the app and add your API keys:
+You can also use cloud providers alongside local models. Open Settings and add your API keys:
 
 | Provider | What you get |
 |----------|-------------|
@@ -55,26 +69,6 @@ No additional setup required — just open Settings in the app and add your API 
 | OpenRouter | Access to 100+ models |
 | SiliconFlow | Cost-effective inference |
 | Ollama | Local models via Ollama |
-
-## Local Inference Setup
-
-To run models locally on your Mac, you need **OminiX-API** (the inference server). Moxin Studio connects to it automatically.
-
-### 1. Install OminiX-API
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/OminiX-ai/OminiX-API/main/install.sh | sh
-```
-
-This installs `ominix-api` to `/usr/local/bin` and creates `~/.OminiX/` for config and models.
-
-### 2. Download a model from the Hub
-
-Open Moxin Studio, go to the **Model Hub** (sidebar), and click **Download** on any model. Models are downloaded to `~/.OminiX/models/`.
-
-### 3. Load and chat
-
-Click **Load** on a downloaded model. Moxin Studio will auto-start OminiX-API and route your chat through it. No manual server management needed.
 
 ### Supported Local Models
 
