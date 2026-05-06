@@ -7,9 +7,9 @@
 
 **A native desktop AI app built with pure Rust and [Makepad](https://github.com/makepad/makepad).**
 
-Chat with local and cloud models, generate images, transcribe speech, and manage your model library — all without a Python runtime.
+Run local LLMs, generate images, clone voices, and transcribe speech — all on your own hardware, without a Python runtime.
 
-[Getting Started](#getting-started) | [Cloud Providers](#cloud-providers) | [Local Inference](#local-inference-setup)
+[Getting Started](#getting-started) | [Supported Models](#supported-local-models) | [Platform](#the-moxin--ominix-platform)
 
 </div>
 
