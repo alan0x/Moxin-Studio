@@ -54,21 +54,6 @@ Open the **Model Hub** from the sidebar, click **Download** on any model, then c
 - **Voice I/O** — Speech-to-text and text-to-speech with voice cloning
 - **MCP support** — Model Context Protocol for tool use
 - **Chat history** — Persistent, searchable conversation history
-- **Cloud fallback** — Optionally connect to cloud providers alongside local models
-
-### Cloud Providers (Optional)
-
-For models not available locally, you can add cloud API keys in Settings:
-
-| Provider | What you get |
-|----------|-------------|
-| OpenAI | GPT-4o, DALL-E, Whisper |
-| Anthropic | Claude Opus, Sonnet, Haiku |
-| Google Gemini | Gemini Pro, Flash |
-| DeepSeek | DeepSeek-V3, R1 |
-| OpenRouter | Access to 100+ models |
-| SiliconFlow | Cost-effective inference |
-| Ollama | Local models via Ollama |
 
 ### Supported Local Models
 
