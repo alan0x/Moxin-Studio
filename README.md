@@ -76,15 +76,63 @@ Open Moxin Studio, go to the **Model Hub** (sidebar), and click **Download** on 
 
 Click **Load** on a downloaded model. Moxin Studio will auto-start OminiX-API and route your chat through it. No manual server management needed.
 
-### Supported local model types
+### Supported Local Models
 
-| Type | Examples |
-|------|----------|
-| LLM | Qwen3, GLM-4, Mistral, MiniCPM |
-| VLM | Qwen3-VL (vision + language) |
-| ASR | Paraformer, Qwen3-ASR |
-| TTS | GPT-SoVITS (voice cloning) |
-| Image | FLUX.2-klein, Z-Image-Turbo |
+Every model below has a dedicated, optimized implementation — not a generic wrapper. The pure Rust models run directly via [OminiX-MLX](https://github.com/OminiX-ai/OminiX-MLX) with Metal GPU acceleration.
+
+#### LLM — Large Language Models
+
+| Model | Implementation | Notes |
+|-------|---------------|-------|
+| Qwen3 | Pure Rust | 0.6B, 4B, 8B variants |
+| Qwen3.5-27B | Pure Rust | Hybrid DeltaNet + Attention |
+| GLM-4 | Pure Rust | |
+| GLM-4.7-Flash | Pure Rust | MoE + MLA architecture |
+| GLM-4.5 MoE | Pure Rust | Mixture of Experts |
+| Mistral / Nemo | Pure Rust | |
+| Mixtral | Pure Rust | MoE |
+| MiniCPM-SALA | Pure Rust | Hybrid attention |
+
+#### VLM — Vision Language Models
+
+| Model | Implementation |
+|-------|---------------|
+| Qwen3-VL | Pure Rust |
+| Moxin-7B | Pure Rust |
+| DeepSeek-OCR-2 | Pure Rust |
+
+#### ASR — Speech Recognition
+
+| Model | Implementation | Notes |
+|-------|---------------|-------|
+| Qwen3-ASR | Pure Rust | 30+ languages |
+| Paraformer (FunASR) | Pure Rust | |
+| FunASR-Nano | Pure Rust | Lightweight |
+| SenseVoice + Qwen3-4B | Pure Rust | LLM-enhanced ASR |
+
+#### TTS — Text to Speech
+
+| Model | Implementation | Notes |
+|-------|---------------|-------|
+| Qwen3-TTS | Pure Rust | Preset voices + voice cloning |
+| GPT-SoVITS | Pure Rust | Zero-shot voice cloning |
+| Step-Audio 2 | Pure Rust | |
+
+#### Image Generation
+
+| Model | Implementation | Notes |
+|-------|---------------|-------|
+| FLUX.2-klein | Pure Rust | Also available as GGUF |
+| Z-Image-Turbo | Pure Rust | |
+| Qwen-Image-2512 | Pure Rust | |
+| Qwen-Image-Edit-2511 | Python MLX | Image editing |
+| Cosmos Predict2 14B | Python MLX | Text-to-image |
+
+#### Video Generation
+
+| Model | Implementation | Notes |
+|-------|---------------|-------|
+| Wan2.2 5B | Python MLX | Text-to-video |
 
 ## The Moxin / OminiX Platform
 
