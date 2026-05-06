@@ -34,12 +34,48 @@ jobs:
 
       - name: Package .app bundle
         run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+
+          mkdir -p "Moxin Studio.app/Contents/MacOS"
+          mkdir -p "Moxin Studio.app/Contents/Resources"
+
           cp target/release/moxin-studio "Moxin Studio.app/Contents/MacOS/moxin-studio"
           chmod +x "Moxin Studio.app/Contents/MacOS/moxin-studio"
 
-          VERSION="${GITHUB_REF_NAME#v}"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" "Moxin Studio.app/Contents/Info.plist"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "Moxin Studio.app/Contents/Info.plist"
+          cp moly-shell/resources/AppIcon.icns "Moxin Studio.app/Contents/Resources/AppIcon.icns"
+
+          cat > "Moxin Studio.app/Contents/Info.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleName</key>
+              <string>Moxin Studio</string>
+              <key>CFBundleDisplayName</key>
+              <string>Moxin Studio</string>
+              <key>CFBundleIdentifier</key>
+              <string>ai.moxin.studio</string>
+              <key>CFBundleVersion</key>
+              <string>${VERSION}</string>
+              <key>CFBundleShortVersionString</key>
+              <string>${VERSION}</string>
+              <key>CFBundlePackageType</key>
+              <string>APPL</string>
+              <key>CFBundleExecutable</key>
+              <string>moxin-studio</string>
+              <key>CFBundleIconName</key>
+              <string>AppIcon</string>
+              <key>CFBundleIconFile</key>
+              <string>AppIcon</string>
+              <key>LSMinimumSystemVersion</key>
+              <string>14.0</string>
+              <key>NSHighResolutionCapable</key>
+              <true/>
+              <key>NSSupportsAutomaticGraphicsSwitching</key>
+              <true/>
+          </dict>
+          </plist>
+          PLIST
 
       - name: Create DMG
         run: |
