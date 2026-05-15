@@ -830,6 +830,7 @@ impl ModelHubApp {
         let show_load    = is_done && load == ModelLoadState::Unloaded && !is_image_edit;
         let show_unload  = is_done && load == ModelLoadState::Loaded && !is_image_edit;
         let show_loading = is_done && load == ModelLoadState::Loading && !is_image_edit;
+        let loading_text = if show_loading { "Loading model..." } else { "" };
 
         let dot      = combined_dot_value(dl, load);
         let st_label = combined_status_label(dl, load);
@@ -897,6 +898,7 @@ impl ModelHubApp {
                 self.view.widget(ids!(hub_llm_panel.hub_panel_header.panel_load_btn)).set_visible(cx, show_load);
                 self.view.widget(ids!(hub_llm_panel.hub_panel_header.panel_unload_btn)).set_visible(cx, show_unload);
                 self.view.widget(ids!(hub_llm_panel.hub_panel_header.panel_loading_label)).set_visible(cx, show_loading);
+                self.view.label(ids!(hub_llm_panel.hub_panel_header.panel_loading_label)).set_text(cx, loading_text);
                 self.view.widget(ids!(hub_llm_panel.hub_panel_header.panel_chat_btn)).set_visible(cx, show_chat);
                 self.view.label(ids!(hub_llm_panel.hub_panel_header.panel_status_msg)).set_text(cx, &msg);
                 if show_prog {
@@ -924,6 +926,7 @@ impl ModelHubApp {
                 self.view.widget(ids!(hub_vlm_panel.hub_panel_header.panel_load_btn)).set_visible(cx, show_load);
                 self.view.widget(ids!(hub_vlm_panel.hub_panel_header.panel_unload_btn)).set_visible(cx, show_unload);
                 self.view.widget(ids!(hub_vlm_panel.hub_panel_header.panel_loading_label)).set_visible(cx, show_loading);
+                self.view.label(ids!(hub_vlm_panel.hub_panel_header.panel_loading_label)).set_text(cx, loading_text);
                 self.view.widget(ids!(hub_vlm_panel.hub_panel_header.panel_chat_btn)).set_visible(cx, show_chat);
                 self.view.label(ids!(hub_vlm_panel.hub_panel_header.panel_status_msg)).set_text(cx, &msg);
                 if show_prog {
@@ -951,6 +954,7 @@ impl ModelHubApp {
                 self.view.widget(ids!(hub_asr_panel.hub_panel_header.panel_load_btn)).set_visible(cx, show_load);
                 self.view.widget(ids!(hub_asr_panel.hub_panel_header.panel_unload_btn)).set_visible(cx, show_unload);
                 self.view.widget(ids!(hub_asr_panel.hub_panel_header.panel_loading_label)).set_visible(cx, show_loading);
+                self.view.label(ids!(hub_asr_panel.hub_panel_header.panel_loading_label)).set_text(cx, loading_text);
                 self.view.label(ids!(hub_asr_panel.hub_panel_header.panel_status_msg)).set_text(cx, &msg);
                 if show_prog {
                     if let Some(p) = pct {
@@ -977,6 +981,7 @@ impl ModelHubApp {
                 self.view.widget(ids!(hub_tts_panel.hub_panel_header.panel_load_btn)).set_visible(cx, show_load);
                 self.view.widget(ids!(hub_tts_panel.hub_panel_header.panel_unload_btn)).set_visible(cx, show_unload);
                 self.view.widget(ids!(hub_tts_panel.hub_panel_header.panel_loading_label)).set_visible(cx, show_loading);
+                self.view.label(ids!(hub_tts_panel.hub_panel_header.panel_loading_label)).set_text(cx, loading_text);
                 self.view.label(ids!(hub_tts_panel.hub_panel_header.panel_status_msg)).set_text(cx, &msg);
                 if show_prog {
                     if let Some(p) = pct {
@@ -1003,6 +1008,7 @@ impl ModelHubApp {
                 self.view.widget(ids!(hub_image_panel.hub_panel_header.panel_load_btn)).set_visible(cx, show_load);
                 self.view.widget(ids!(hub_image_panel.hub_panel_header.panel_unload_btn)).set_visible(cx, show_unload);
                 self.view.widget(ids!(hub_image_panel.hub_panel_header.panel_loading_label)).set_visible(cx, show_loading);
+                self.view.label(ids!(hub_image_panel.hub_panel_header.panel_loading_label)).set_text(cx, loading_text);
                 self.view.label(ids!(hub_image_panel.hub_panel_header.panel_status_msg)).set_text(cx, &msg);
                 if show_prog {
                     if let Some(p) = pct {
@@ -1029,6 +1035,7 @@ impl ModelHubApp {
                 self.view.widget(ids!(hub_image_edit_panel.hub_panel_header.panel_load_btn)).set_visible(cx, show_load);
                 self.view.widget(ids!(hub_image_edit_panel.hub_panel_header.panel_unload_btn)).set_visible(cx, show_unload);
                 self.view.widget(ids!(hub_image_edit_panel.hub_panel_header.panel_loading_label)).set_visible(cx, show_loading);
+                self.view.label(ids!(hub_image_edit_panel.hub_panel_header.panel_loading_label)).set_text(cx, loading_text);
                 self.view.label(ids!(hub_image_edit_panel.hub_panel_header.panel_status_msg)).set_text(cx, &msg);
                 if show_prog {
                     if let Some(p) = pct {
@@ -1055,6 +1062,7 @@ impl ModelHubApp {
                 self.view.widget(ids!(hub_video_panel.hub_panel_header.panel_load_btn)).set_visible(cx, show_load);
                 self.view.widget(ids!(hub_video_panel.hub_panel_header.panel_unload_btn)).set_visible(cx, show_unload);
                 self.view.widget(ids!(hub_video_panel.hub_panel_header.panel_loading_label)).set_visible(cx, show_loading);
+                self.view.label(ids!(hub_video_panel.hub_panel_header.panel_loading_label)).set_text(cx, loading_text);
                 self.view.widget(ids!(hub_video_panel.hub_panel_header.panel_chat_btn)).set_visible(cx, false);
                 self.view.label(ids!(hub_video_panel.hub_panel_header.panel_status_msg)).set_text(cx, &msg);
                 if show_prog {

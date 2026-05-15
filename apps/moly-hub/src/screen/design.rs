@@ -501,7 +501,7 @@ live_design! {
                     }
                     text_style: <FONT_MEDIUM>{ font_size: 11.5 }
                 }
-                text: "Loading model..."
+                text: ""
             }
             panel_chat_btn = <HubActionButton> {
                 text: "Open in Chat"
