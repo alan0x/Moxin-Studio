@@ -848,9 +848,9 @@ impl ModelHubApp {
         } else if load == ModelLoadState::LoadError {
             "Load failed. Check logs — ominix-api may be missing or model files incomplete.".to_string()
         } else if show_load {
-            "Downloaded. Press Load to bring into memory.".to_string()
+            "Ready to load into memory.".to_string()
         } else if is_image_edit && is_done {
-            "Downloaded. Select an image and prompt, then click Edit Image.".to_string()
+            "Ready for image editing.".to_string()
         } else {
             String::new()
         };
@@ -884,8 +884,8 @@ impl ModelHubApp {
         let show_status_msg = !msg.is_empty();
         // Disable Load button if another model is blocking
         let show_load = show_load && blocker_name.is_none();
-        let show_action_row = show_can || show_rm;
-        let show_runtime_row = show_load || show_unload || show_loading || show_chat;
+        let show_action_row = show_can;
+        let show_runtime_row = show_load || show_unload || show_loading || show_chat || show_rm;
 
         // ids!() is compile-time — each panel's paths must be written explicitly.
         match self.active_panel {
